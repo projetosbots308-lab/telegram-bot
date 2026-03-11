@@ -56,29 +56,39 @@ async def send_chapter(job):
         message = job["message"]
         source = job["source"]
         chapter = job["chapter"]
+        format_type = job.get("format", "cbz")
 
-        try:
-            pages = await source.pages(chapter["url"])
-        except:
-            await message.reply_text("❌ Erro ao obter páginas.")
-            return
+        pages = await source.pages(chapter["url"])
 
         if not pages:
             await message.reply_text("❌ Nenhuma página encontrada.")
             return
 
-        try:
-            cbz_buffer, cbz_name = await create_cbz(
+        if format_type == "pdf":
+            buffer, name = await create_pdf(
                 pages,
                 chapter.get("manga_title", "Manga"),
                 f"Cap_{chapter.get('chapter_number')}",
             )
-        except:
-            await message.reply_text("❌ Erro ao criar CBZ.")
-            return
 
-        await message.reply_document(document=cbz_buffer, filename=cbz_name)
-        cbz_buffer.close()
+        elif format_type == "cbr":
+            buffer, name = await create_cbr(
+                pages,
+                chapter.get("manga_title", "Manga"),
+                f"Cap_{chapter.get('chapter_number')}",
+            )
+
+        else:
+            buffer, name = await create_cbz(
+                pages,
+                chapter.get("manga_title", "Manga"),
+                f"Cap_{chapter.get('chapter_number')}",
+            )
+
+        await message.reply_document(document=buffer, filename=name)
+
+        buffer.close()
+
 
 
 # ==========================================================
@@ -240,8 +250,10 @@ async def select_manga(update, context):
     user_id = query.from_user.id
 
     buttons = [
-        [InlineKeyboardButton("📥 Baixar tudo", callback_data=f"download_all|0|{user_id}")],
-        [InlineKeyboardButton("📖 Ver capítulos", callback_data=f"chap_page|0|{user_id}")]
+    [InlineKeyboardButton("CBZ", callback_data=f"setformat|cbz|{user_id}")],
+    [InlineKeyboardButton("PDF", callback_data=f"setformat|pdf|{user_id}")],
+    [InlineKeyboardButton("CBR", callback_data=f"setformat|cbr|{user_id}")],
+    [InlineKeyboardButton("📖 Ver capítulos", callback_data=f"chap_page|0|{user_id}")]
     ]
 
     await query.message.reply_text(
