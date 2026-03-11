@@ -98,7 +98,7 @@ async def buscar(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     query_text = " ".join(context.args)
     if not query_text:
-        await update.message.reply_text("Use /bb <nome>")
+        await update.message.reply_text("Use /buscar <nome do mangá>")
         return
 
     msg = await update.message.reply_text("🔎 Buscando em todas as fontes...")
@@ -408,7 +408,7 @@ def main():
 
     app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
 
-    app.add_handler(CommandHandler("bb", buscar))
+    app.add_handler(CommandHandler("buscar", buscar))
 
     app.add_handler(CallbackQueryHandler(change_page, pattern="^page"))
     app.add_handler(CallbackQueryHandler(select_manga, pattern="^select"))
